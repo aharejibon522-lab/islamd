@@ -2,7 +2,7 @@
 
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Environment, PerspectiveCamera } from "@react-three/drei";
-import { Suspense, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
 function Tree({ position, scale = 1 }: { position: [number, number, number]; scale?: number }) {
@@ -28,6 +28,16 @@ function Player({ onMove }: { onMove: (x: number, z: number) => void }) {
   const player = useRef<THREE.Group>(null);
   const keys = useRef<Record<string, boolean>>({});
   const direction = useMemo(() => new THREE.Vector3(), []);
+  useEffect(() => {
+    const down = (event: KeyboardEvent) => { keys.current[event.code] = true; };
+    const up = (event: KeyboardEvent) => { keys.current[event.code] = false; };
+    window.addEventListener("keydown", down);
+    window.addEventListener("keyup", up);
+    return () => {
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+    };
+  }, []);
   useFrame((_, delta) => {
     if (!player.current) return;
     direction.set(0, 0, 0);
@@ -48,16 +58,6 @@ function Player({ onMove }: { onMove: (x: number, z: number) => void }) {
     <group
       ref={player}
       position={[0, 0.15, 4]}
-      onUpdate={() => {
-        const down = (event: KeyboardEvent) => { keys.current[event.code] = true; };
-        const up = (event: KeyboardEvent) => { keys.current[event.code] = false; };
-        window.addEventListener("keydown", down);
-        window.addEventListener("keyup", up);
-        return () => {
-          window.removeEventListener("keydown", down);
-          window.removeEventListener("keyup", up);
-        };
-      }}
     >
       <mesh position={[0, 0.72, 0]} castShadow>
         <capsuleGeometry args={[0.34, 0.72, 5, 10]} />
